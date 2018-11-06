@@ -103,4 +103,4 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-/dailyfresh/settingg.py
+/dailyfresh/settings.py
