@@ -2,7 +2,6 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
-
     url(r'^admin/', admin.site.urls),
     url(r'^tinymce/', include('tinymce.urls')), # 富文本编辑器
     url(r'^user/', include(('user.urls','user'), namespace='user')), # 用户模块
