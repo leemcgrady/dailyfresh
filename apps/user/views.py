@@ -1,11 +1,12 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.views.generic import View
 from django.http import HttpResponse
 from django.conf import settings
 
-from user.models import User, Address
+from user.models import User, Address, AddressManager
+from utils.mixin import LoginRequiredMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired
 from django_redis import get_redis_connection
@@ -53,6 +54,7 @@ def register(request):
         user.save()
 
         return redirect(reverse('goods:index'))
+
 
 class RegisterView(View):
 
@@ -127,7 +129,15 @@ class LoginView(View):
 
     def get(self, request):
 
-        return render(request,'login.html')
+        if 'username' in request.COOKIES:
+            username = request.COOKIES.get('username')
+            checked = 'checked'
+        else:
+            username = ''
+            checked = ''
+
+        return render(request, 'login.html', {'username' : username, 'checked' : checked})
+
 
     def post(self, request):
 
@@ -167,6 +177,19 @@ class LoginView(View):
 
 
 
+class LogoutView(View):
 
+    def get(self,request):
 
+        logout(request)
+
+        return redirect(reverse('goods:index'))
+
+class UserInfoView(LoginRequiredMixin, View):
+
+    def get(self, request):
+
+        user = request.user
+
+        address = Address.objects.get_default_address(user)
 
