@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.core.cache import cache
 from django.views.generic import View
 from goods.models import GoodsType, IndexGoodsBanner, IndexPromotionBanner, IndexTypeGoodsBanner
+from django_redis import get_redis_connection
 # Create your views here.
 
 
@@ -33,18 +34,21 @@ class IndexView(View):
             type.image_banners = image_banners
             type.title_banners = title_banners
 
+        # 获取用户购物车中商品的数目
+        user = request.user
+        cart_count = 0
+        if user.is_authenticated():
+            # 用户已登录
+            conn = get_redis_connection('default')
+            cart_key = 'cart_%d'%user.id
+            cart_count = conn.hlen(cart_key)
+
+        cart_count = 0
         context = {'types': types,
                    'goods_banners': goods_banners,
-                   'promotion_banners': promotion_banners}
-
-        # 获取用户购物车中商品的数目
-        # user = request.user
-        # cart_count = 0
-        # if user.is_authenticated():
-        #     # 用户已登录
-        #     conn = get_redis_connection('default')
-        #     cart_key = 'cart_%d'%user.id
-        #     cart_count = conn.hlen(cart_key)
+                   'promotion_banners': promotion_banners,
+                   'cart_count': cart_count
+                   }
 
         # 组织模板上下文
         # context.update(cart_count=cart_count)

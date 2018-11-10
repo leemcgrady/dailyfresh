@@ -6,12 +6,14 @@ from django.http import HttpResponse
 from django.conf import settings
 
 from user.models import User, Address, AddressManager
+from goods.models import GoodsSKU
 from utils.mixin import LoginRequiredMixin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired
 from django_redis import get_redis_connection
 from celery_tasks.tasks import send_register_active_email
 from django.contrib.auth.hashers import check_password,make_password
+from django_redis import get_redis_connection
 import re
 # Create your views here.
 
@@ -99,6 +101,10 @@ class RegisterView(View):
         token = serializer.dumps(info)
         token = token.decode()
 
+        context = {'types': types,
+                   'goods_banners': goods_banners,
+                   'promotion_banners': promotion_banners}
+
         send_register_active_email.delay(email, user_name, token)
 
         return redirect(reverse('goods:index'))
@@ -137,7 +143,6 @@ class LoginView(View):
             checked = ''
 
         return render(request, 'login.html', {'username' : username, 'checked' : checked})
-
 
     def post(self, request):
 
@@ -190,7 +195,26 @@ class UserInfoView(LoginRequiredMixin, View):
 
     def get(self, request):
 
-        return render(request, 'user_center_info.html', {'page' : 'user'})
+        user = request.user
+        user_id = user.id
+        address = Address.objects.get_default_address(user)
+
+        con = get_redis_connection('default')
+        history_key = 'history_%d' % user_id
+
+        sku_ids = con.lrange(history_key, 0, 4) # [2,3,1]
+
+        # 遍历获取用户浏览的商品信息
+        goods_li = []
+        for id in sku_ids:
+            goods = GoodsSKU.objects.get(id=id)
+            goods_li.append(goods)
+
+        content =  {'page' : 'user',
+                    'address' : address,
+                    'goods_li' : goods_li
+                    }
+        return render(request, 'user_center_info.html',)
         # user = request.user
         #
         # address = Address.objects.get_default_address(user)
@@ -199,7 +223,6 @@ class UserInfoView(LoginRequiredMixin, View):
 class UserOrderView(LoginRequiredMixin, View):
 
     def get(self, request):
-
         return render(request, 'user_center_order.html',  {'page' : 'order'})
 
 
@@ -207,5 +230,45 @@ class AddressView(LoginRequiredMixin, View):
 
     def get(self, request):
 
-        return render(request, 'user_center_site.html',  {'page' : 'address'})
+        user = request.user
+        address = Address.objects.get_default_address(user)
 
+        return render(request, 'user_center_site.html',  {'page' : 'address', 'address' : address})
+
+    def post(self, request):
+
+        receiver = request.POST.get('receiver')
+        addr = request.POST.get('addr')
+        zip_code = request.POST.get('zip_code')
+        phone = request.POST.get('phone')
+
+        # 校验数据
+        if not all([receiver, addr, phone]):
+            return render(request, 'user_center_site.html', {'errmsg':'数据不完整'})
+
+        # 校验手机号
+        if not re.match(r'^1[3|4|5|7|8][0-9]{9}$', phone):
+            return render(request, 'user_center_site.html', {'errmsg':'手机格式不正确'})
+
+        user = request.user
+
+        address = Address.objects.get_default_address(user)
+
+        is_default = True
+
+        if address:
+            is_default = False
+
+        print(addr, receiver)
+        Address.objects.create(
+            user=user,
+            receiver=receiver,
+            addr=addr,
+            zip_code=zip_code,
+            phone=phone,
+            is_default=is_default
+        )
+
+
+        # 返回应答,刷新地址页面
+        return redirect(reverse('user:address')) # get请求方式
