@@ -181,7 +181,6 @@ class LoginView(View):
             return render(request,'login.html', {"errmsg" : "用户不存在"})
 
 
-
 class LogoutView(View):
 
     def get(self,request):
@@ -210,11 +209,11 @@ class UserInfoView(LoginRequiredMixin, View):
             goods = GoodsSKU.objects.get(id=id)
             goods_li.append(goods)
 
-        content =  {'page' : 'user',
-                    'address' : address,
-                    'goods_li' : goods_li
+        content = {'page': 'user',
+                   'address': address,
+                   'goods_li': goods_li
                     }
-        return render(request, 'user_center_info.html',)
+        return render(request, 'user_center_info.html', content)
         # user = request.user
         #
         # address = Address.objects.get_default_address(user)
