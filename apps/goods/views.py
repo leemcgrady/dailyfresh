@@ -3,7 +3,8 @@ from django.urls import reverse
 
 from django.core.cache import cache
 from django.views.generic import View
-from goods.models import GoodsType, IndexGoodsBanner, IndexPromotionBanner, IndexTypeGoodsBanner
+from goods.models import GoodsType, IndexGoodsBanner, IndexPromotionBanner, IndexTypeGoodsBanner, GoodsSKU
+from order.models import OrderGoods
 from django_redis import get_redis_connection
 # Create your views here.
 
@@ -57,3 +58,48 @@ class IndexView(View):
 
         # 使用模板
         return render(request, 'index.html', context)
+
+
+class DetailsView(View):
+
+    def get(self, request, goods_id):
+
+        try:
+            sku = GoodsSKU.objects.get(id=goods_id)
+        except GoodsSKU.DoesNotExist:
+            return redirect(reverse('goods:index'))
+
+        types = GoodsType.objects.all()
+
+        sku_orders = OrderGoods.objects.filter(sku=sku).exclude(comment='')
+
+        new_skus = GoodsSKU.objects.filter(type=sku.type).order_by('-create_time')[:2]
+
+        # 获取同一个SPU的其他规格商品
+        same_spu_skus = GoodsSKU.objects.filter(goods=sku.goods).exclude(id=goods_id)
+
+        user = request.user
+        cart_count = 0
+        if user.is_authenticated():
+
+            conn = get_redis_connection('default')
+            cart_key = "cart_%d" % user.id
+            cart_count = conn.hlen(cart_key)
+
+            history_key = "history_%d" % user.id
+            conn.lrem(history_key, 0, goods_id)
+            conn.lpush(history_key, goods_id)
+            conn.ltrim(history_key, 0, 4)
+
+            # 组织模板上下文
+        context = {'sku': sku, 'types': types,
+                   'sku_orders': sku_orders,
+                   'new_skus': new_skus,
+                   'same_spu_skus': same_spu_skus,
+                   'cart_count': cart_count}
+
+        # 使用模板
+        return render(request, 'detail.html', context)
+
+
+

@@ -214,9 +214,6 @@ class UserInfoView(LoginRequiredMixin, View):
                    'goods_li': goods_li
                     }
         return render(request, 'user_center_info.html', content)
-        # user = request.user
-        #
-        # address = Address.objects.get_default_address(user)
 
 
 class UserOrderView(LoginRequiredMixin, View):
