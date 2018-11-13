@@ -52,3 +52,10 @@ class CartAddView(View):
 
         return JsonResponse({"res": 5, "total_count": total_count, "message": "添加成功"})
 
+
+class CartInfoView(View):
+
+    def get(self, requset):
+
+        return render(requset, "cart.html")
+
