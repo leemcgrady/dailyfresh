@@ -76,3 +76,9 @@ class OrderPlaceView(LoginRequiredMixin, View):
 
         # 使用模板
         return render(request, 'place_order.html', context)
+
+
+class OrderCommitView(View):
+
+    def post(self, request):
+        pass

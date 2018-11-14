@@ -10,9 +10,13 @@
 	<div class="common_list_con clearfix">
 		<dl>
 			<dt>寄送到：</dt>
-			<dd><input type="radio" name="" checked="">北京市 海淀区 东北旺西路8号中关村软件园 （李思 收） 182****7528</dd>
+            {% for addr in addrs %}
+			<dd>
+                <input type="radio" name="addr_id" value="{{ addr.id }}" {% if addr.is_default %}checked{% endif %}>{{ addr.addr }} （{{ addr.receiver }} 收） {{ addr.phone }}
+            </dd>
+            {% endfor %}
 		</dl>
-		<a href="user_center_site.html" class="edit_site">编辑收货地址</a>
+		<a href="{% url "user:address" %}" class="edit_site">编辑收货地址</a>
 
 	</div>
 
@@ -57,14 +61,14 @@
 
 	<div class="common_list_con clearfix">
 		<div class="settle_con">
-			<div class="total_goods_count">共<em>{{ total_count }}</em>件商品，总金额<b>{{ total_amount }}元</b></div>
+			<div class="total_goods_count">共<em>{{ total_count }}</em>件商品，总金额<b>{{ total_price }}元</b></div>
 			<div class="transit">运费：<b>10元</b></div>
 			<div class="total_pay">实付款：<b>{{ total_pay }}元</b></div>
 		</div>
 	</div>
 
 	<div class="order_submit clearfix">
-		<a href="javascript:;" id="order_btn">提交订单</a>
+		<a href="javascript:;" sku_ids="{{ sku_ids }}" id="order_btn">提交订单</a>
 	</div>
 {% endblock body %}
 
@@ -82,17 +86,37 @@
 	<script type="text/javascript" src="js/jquery-1.12.2.js"></script>
 	<script type="text/javascript">
 		$('#order_btn').click(function() {
-			localStorage.setItem('order_finish',2);
 
-			$('.popup_con').fadeIn('fast', function() {
 
-				setTimeout(function(){
-					$('.popup_con').fadeOut('fast',function(){
-						window.location.href = 'index.html';
-					});
-				},3000)
+            add_id = $(".input[name='addr_id']:checked").val();
+            pay_method = $('input[name="pay_style"]:checked').val();
 
-			});
+            sku_ids = $(this).attr('sku_ids');
+            csrf = $('input[name="csrfmiddlewaretoken"]').val();
+
+            params = {'addr_id':addr_id, 'pay_method':pay_method, 'sku_ids':sku_ids,
+                        'csrfmiddlewaretoken':csrf};
+
+            $.post("order/commit", params, function (data) {
+
+                if (data == 5) {
+
+                    localStorage.setItem('order_finish', 2);
+                    $('.popup_con').fadeIn('fast', function() {
+
+                        setTimeout(function(){
+                            $('.popup_con').fadeOut('fast',function(){
+                                window.location.href = 'index.html';
+                            });
+                        },3000)
+
+                    });
+                } else {
+                    alert(data.errmsg)
+                }
+
+            })
+
 		});
 	</script>
 {% endblock bottomfiles %}
