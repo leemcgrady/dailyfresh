@@ -47,7 +47,7 @@ class IndexView(View):
             # 获取用户购物车中商品的数目
         user = request.user
         cart_count = 0
-        if user.is_authenticated():
+        if user.is_authenticated:
             # 用户已登录
             conn = get_redis_connection('default')
             cart_key = 'cart_%d'%user.id
@@ -80,7 +80,7 @@ class DetailsView(View):
 
         user = request.user
         cart_count = 0
-        if user.is_authenticated():
+        if user.is_authenticated:
 
             conn = get_redis_connection('default')
             cart_key = "cart_%d" % user.id
@@ -130,7 +130,7 @@ class ListView(View):
         # 获取用户购物车中商品的数目
         user = request.user
         cart_count = 0
-        if user.is_authenticated():
+        if user.is_authenticated:
             # 用户已登录
             conn = get_redis_connection('default')
             cart_key = 'cart_%d' % user.id

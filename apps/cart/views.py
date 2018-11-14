@@ -75,7 +75,7 @@ class CartInfoView(LoginRequiredMixin, View):
             sku = GoodsSKU.objects.get(id=sku_id)
             amount = sku.price * int(count)
             sku.amount = amount
-            sku.count = count
+            sku.count = int(count)
 
             skus.append(sku)
             total_count += int(count)
@@ -95,7 +95,7 @@ class CartUpdateView(View):
 
         '''购物车记录更新'''
         user = request.user
-        if not user.is_authenticated():
+        if not user.is_authenticated:
             # 用户未登录
             return JsonResponse({'res': 0, 'errmsg': '请先登录'})
 
