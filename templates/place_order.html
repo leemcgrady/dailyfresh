@@ -1,6 +1,6 @@
 {% extends "base_no_cart.html" %}
 {% block title %}天天生鲜-提交订单{% endblock title %}
-
+{% load staticfiles %}
 {% block page_title %}提交订单{% endblock page_title %}
 
 {% block body %}
@@ -83,10 +83,9 @@
 	</div>
 {% endblock bottom %}
 {% block bottomfiles %}
-	<script type="text/javascript" src="js/jquery-1.12.2.js"></script>
+	<script type="text/javascript" src="{% static "js/jquery-1.12.4.min.js" %}"></script>
 	<script type="text/javascript">
 		$('#order_btn').click(function() {
-
 
             add_id = $(".input[name='addr_id']:checked").val();
             pay_method = $('input[name="pay_style"]:checked').val();
