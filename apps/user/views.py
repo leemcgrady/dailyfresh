@@ -108,7 +108,6 @@ class RegisterView(View):
 
         return redirect(reverse('goods:index'))
 
-
 class ActiveView(View):
 
     def get(self, request, token):
