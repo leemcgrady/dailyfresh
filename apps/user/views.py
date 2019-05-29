@@ -319,6 +319,5 @@ class AddressView(LoginRequiredMixin, View):
             is_default=is_default
         )
 
-
         # 返回应答,刷新地址页面
         return redirect(reverse('user:address')) # get请求方式
